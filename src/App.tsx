@@ -15,9 +15,9 @@ import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import type { Subtitle, AppSettings, PracticeStats } from "./types/transcript";
 
 import VideoPlayer from "./components/VideoPlayer";
-import StatsCard from "./components/StatsCard";
 import ShadowControls from "./components/ShadowControls";
 import SettingsDrawer from "./components/SettingsDrawer";
+
 import sampleTranscriptData from "./data/sampleTranscript.json";
 
 // Cast the JSON import to Subtitle[]
@@ -740,7 +740,7 @@ function App() {
           </div>
         </div>
 
-        {/* Right Side: Controls */}
+        {/* Right Side: A-B Segment Loop Controls */}
         <div className="lg:col-span-6 flex flex-col gap-6 w-full">
           <ShadowControls
             shadowActive={shadowActive}
@@ -751,6 +751,7 @@ function App() {
             }
             isShadowWaiting={isShadowWaiting}
             pauseProgress={pauseProgress}
+            hideShadowSection
             abEnabled={abEnabled}
             abStart={abStart}
             abEnd={abEnd}
@@ -765,15 +766,7 @@ function App() {
         </div>
       </main>
 
-      {/* Footer Stats summary bar */}
-      <footer className="mt-auto w-full pt-4 border-t border-brand-light-gray/40">
-        <StatsCard
-          currentSubtitleId={currentActiveSub.id}
-          repeatCount={stats.repeatCounts[currentActiveSub.id] || 0}
-          totalPracticeTime={stats.totalPracticeTime}
-          currentSpeed={playbackSpeed}
-        />
-      </footer>
+
 
       {/* Settings Sliding Drawer overlay */}
       <SettingsDrawer

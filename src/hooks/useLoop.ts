@@ -31,54 +31,82 @@ export function useLoop({
   const [repeatMode, setRepeatModeState] = useState<RepeatMode>('off');
   const [currentRepeatIndex, setCurrentRepeatIndex] = useState<number>(0);
   const [isABLooping, setIsABLooping] = useState<boolean>(false);
-  
-  // Ref to prevent stale closures in interval/callbacks
-  const stateRef = useRef({ repeatMode, currentRepeatIndex, start, end, isABLooping });
+
+  // Ref to prevent stale closures in the main loop effect
+  const stateRef = useRef({ repeatMode, currentRepeatIndex, start, end, isABLooping, customTarget });
   useEffect(() => {
-    stateRef.current = { repeatMode, currentRepeatIndex, start, end, isABLooping };
-  }, [repeatMode, currentRepeatIndex, start, end, isABLooping]);
+    stateRef.current = { repeatMode, currentRepeatIndex, start, end, isABLooping, customTarget };
+  }, [repeatMode, currentRepeatIndex, start, end, isABLooping, customTarget]);
+
+  // Guard: prevents firing multiple times while currentTime is still >= end.
+  // YouTube's seekTo is async — the condition stays true for several renders
+  // before the seek actually lands.
+  const hasFiredRef = useRef(false);
 
   const setRepeatMode = useCallback((mode: RepeatMode) => {
     setRepeatModeState(mode);
     setCurrentRepeatIndex(0);
+    hasFiredRef.current = false;
   }, []);
 
   const toggleABLoop = useCallback(() => {
     setIsABLooping(prev => !prev);
+    hasFiredRef.current = false;
   }, []);
 
   useEffect(() => {
-    // Reset repeat index when subtitle changes
+    // Reset state when segment boundaries change
     setCurrentRepeatIndex(0);
+    hasFiredRef.current = false;
   }, [start, end]);
 
   useEffect(() => {
     if (!isPlaying) return;
 
-    const { repeatMode: activeMode, currentRepeatIndex: idx, start: currentStart, end: currentEnd, isABLooping: abActive } = stateRef.current;
+    const {
+      repeatMode: activeMode,
+      currentRepeatIndex: idx,
+      start: currentStart,
+      end: currentEnd,
+      isABLooping: abActive,
+      customTarget: target,
+    } = stateRef.current;
 
-    // Check if we hit the end of the subtitle
     if (currentTime >= currentEnd) {
-      if (abActive || activeMode === 'infinite') {
-        seekTo(currentStart);
-        play();
-        if (incrementStatsRepeat) incrementStatsRepeat();
-      } else if (activeMode === 'x3' || activeMode === 'x5' || activeMode === 'custom') {
-        const target = activeMode === 'x3' ? 3 : activeMode === 'x5' ? 5 : (customTarget || 0);
+      // Only fire once per end-crossing; the guard resets when time drops below end again
+      if (hasFiredRef.current) return;
+      hasFiredRef.current = true;
+
+      if (activeMode === 'x3' || activeMode === 'x5' || activeMode === 'custom') {
+        const maxRepeats = activeMode === 'x3' ? 3 : activeMode === 'x5' ? 5 : (target || 0);
         const nextIdx = idx + 1;
-        if (nextIdx < target) {
+
+        if (nextIdx < maxRepeats) {
+          // Still more repeats to go — loop back
           setCurrentRepeatIndex(nextIdx);
           seekTo(currentStart);
           play();
           if (incrementStatsRepeat) incrementStatsRepeat();
+          hasFiredRef.current = false; // allow the next end-crossing to fire
         } else {
-          // Finished repeating
+          // All repeats done.
+          // IMPORTANT: also clear isABLooping so the infinite branch can't re-trigger
           setRepeatModeState('off');
           setCurrentRepeatIndex(0);
+          setIsABLooping(false);
           pause();
           if (onRepeatComplete) onRepeatComplete();
         }
+      } else if (abActive || activeMode === 'infinite') {
+        // Infinite AB loop or explicit infinite repeat
+        seekTo(currentStart);
+        play();
+        if (incrementStatsRepeat) incrementStatsRepeat();
+        hasFiredRef.current = false; // allow next crossing
       }
+    } else {
+      // currentTime dropped back below end — reset guard for the next crossing
+      hasFiredRef.current = false;
     }
   }, [currentTime, isPlaying, seekTo, play, pause, onRepeatComplete, incrementStatsRepeat]);
 
