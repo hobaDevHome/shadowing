@@ -1,0 +1,74 @@
+[
+  {
+    "id": 1,
+    "start": 0.5,
+    "end": 3.2,
+    "text": "Welcome to ShadowSpeak, your personal English shadowing assistant."
+  },
+  {
+    "id": 2,
+    "start": 3.5,
+    "end": 7.0,
+    "text": "Shadowing is a language learning technique where you repeat an audio source."
+  },
+  {
+    "id": 3,
+    "start": 7.3,
+    "end": 10.5,
+    "text": "You should try to mimic the speaker's pronunciation, rhythm, and intonation."
+  },
+  {
+    "id": 4,
+    "start": 10.8,
+    "end": 13.5,
+    "text": "This app is built to make that practice easier than ever."
+  },
+  {
+    "id": 5,
+    "start": 13.8,
+    "end": 16.5,
+    "text": "On the left side, you can see the YouTube video player."
+  },
+  {
+    "id": 6,
+    "start": 16.8,
+    "end": 19.8,
+    "text": "On the right side, you'll find the interactive transcript panel."
+  },
+  {
+    "id": 7,
+    "start": 20.1,
+    "end": 23.4,
+    "text": "You can select any sentence to start practicing it right away."
+  },
+  {
+    "id": 8,
+    "start": 23.8,
+    "end": 27.2,
+    "text": "Use the Repeat control to loop a single subtitle over and over."
+  },
+  {
+    "id": 9,
+    "start": 27.6,
+    "end": 31.0,
+    "text": "Toggle Shadow Mode to automatically pause the video after each sentence."
+  },
+  {
+    "id": 10,
+    "start": 31.3,
+    "end": 34.0,
+    "text": "This pause gives you time to speak the sentence out loud."
+  },
+  {
+    "id": 11,
+    "start": 34.3,
+    "end": 37.5,
+    "text": "You can also use keyboard shortcuts to control the app with ease."
+  },
+  {
+    "id": 12,
+    "start": 37.8,
+    "end": 41.5,
+    "text": "Keep practicing every day, and watch your fluency grow!"
+  }
+]
