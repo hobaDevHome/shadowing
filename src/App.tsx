@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useUrlHistory, type AbSegment } from "./hooks/useUrlHistory";
+import SegmentsPanel from "./components/SegmentsPanel";
 import {
   Play,
   Pause,
@@ -21,7 +23,6 @@ import SettingsDrawer from "./components/SettingsDrawer";
 import sampleTranscriptData from "./data/sampleTranscript.json";
 
 import { History } from "lucide-react";
-import { useUrlHistory } from "./hooks/useUrlHistory";
 import HistoryPanel from "./components/HistoryPanel";
 
 // Cast the JSON import to Subtitle[]
@@ -33,8 +34,12 @@ function App() {
   const [activeSubtitleId, setActiveSubtitleId] = useState<number>(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
-  const { history, addUrl } = useUrlHistory();
+  
 const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+
+const { history, addUrl, saveSegments } = useUrlHistory();
+const [segments, setSegments] = useState<AbSegment[]>([]);
+const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
 
   // App Settings State
   const [settings, setSettings] = useState<AppSettings>({
@@ -305,14 +310,42 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     setAbCustomCount(3);
     setIsAbLoopingActive(false);
     setAbLoopMode('off');
+    setActiveSegmentId(null)
   }, [setIsAbLoopingActive, setAbLoopMode]);
 
-  const handleApplyAB = useCallback((mode: "off" | "infinite" | "x3" | "x5" | "custom") => {
+const handleApplyAB = useCallback(
+  (mode: "off" | "infinite" | "x3" | "x5" | "custom") => {
+    if (abStart === null || abEnd === null) return;
+
     setAbEnabled(true);
     setAbRepeatMode(mode);
-    setAbLoopMode(mode === 'custom' ? 'custom' : mode as any);
+    setAbLoopMode(mode === "custom" ? "custom" : (mode as any));
     setIsAbLoopingActive(true);
-  }, [setAbLoopMode, setIsAbLoopingActive]);
+
+    const newSegment: AbSegment = {
+      id: `${Date.now()}`,
+      start: abStart,
+      end: abEnd,
+      repeatMode: mode === "off" ? "infinite" : mode,
+      customCount: mode === "custom" ? abCustomCount : undefined,
+    };
+
+    setSegments((prev) => {
+      const filtered = prev.filter(
+        (s) =>
+          Math.abs(s.start - newSegment.start) > 0.3 ||
+          Math.abs(s.end - newSegment.end) > 0.3,
+      );
+      const updated = [...filtered, newSegment];
+      saveSegments(videoUrl, updated);
+      return updated;
+    });
+
+    setActiveSegmentId(newSegment.id);
+  },
+  [abStart, abEnd, abCustomCount, videoUrl, saveSegments, setAbLoopMode, setIsAbLoopingActive],
+);
+
 
   // Play Once boundaries check
   useEffect(() => {
@@ -336,6 +369,15 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     markAsPracticed,
     showToast,
   ]);
+  // segments
+  useEffect(() => {
+  setActiveSegmentId(null);
+}, [videoUrl]);
+
+useEffect(() => {
+  const record = history.find((r) => r.url === videoUrl);
+  setSegments(record?.segments || []);
+}, [videoUrl, history]);
 
   // Session Time Ticker
   useEffect(() => {
@@ -456,6 +498,56 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     },
     [seekTo, play, setRepeatMode, setIsABLooping, showToast],
   );
+
+  const applySegment = useCallback(
+  (segment: AbSegment) => {
+    setShadowActive(false);
+    setRepeatMode("off");
+    setPlayOnceConfig({ active: false, end: 0, id: null });
+
+    setAbStart(segment.start);
+    setAbEnd(segment.end);
+    setAbEnabled(true);
+    setAbRepeatMode(segment.repeatMode);
+    setAbLoopMode(segment.repeatMode);
+    if (segment.repeatMode === "custom" && segment.customCount) {
+      setAbCustomCount(segment.customCount);
+    }
+    setIsAbLoopingActive(true);
+    setActiveSegmentId(segment.id);
+
+    seekTo(segment.start);
+    play();
+    showToast(`Segment ${segment.start.toFixed(1)}s – ${segment.end.toFixed(1)}s`);
+  },
+  [seekTo, play, setRepeatMode, setIsAbLoopingActive, setAbLoopMode, showToast],
+);
+
+const deleteSegment = useCallback(
+  (id: string) => {
+    setSegments((prev) => {
+      const updated = prev.filter((s) => s.id !== id);
+      saveSegments(videoUrl, updated);
+      return updated;
+    });
+    setActiveSegmentId((prev) => (prev === id ? null : prev));
+  },
+  [videoUrl, saveSegments],
+);
+
+const goToPreviousSegment = useCallback(() => {
+  if (segments.length === 0) return;
+  const idx = segments.findIndex((s) => s.id === activeSegmentId);
+  const prevIndex = idx <= 0 ? segments.length - 1 : idx - 1;
+  applySegment(segments[prevIndex]);
+}, [segments, activeSegmentId, applySegment]);
+
+const goToNextSegment = useCallback(() => {
+  if (segments.length === 0) return;
+  const idx = segments.findIndex((s) => s.id === activeSegmentId);
+  const nextIndex = idx === -1 || idx === segments.length - 1 ? 0 : idx + 1;
+  applySegment(segments[nextIndex]);
+}, [segments, activeSegmentId, applySegment]);
 
   const handleRepeatInfinite = useCallback(
     (sub: Subtitle) => {
@@ -589,16 +681,16 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
     showToast(`Speed: ${next.toFixed(2)}x`);
   }, [playbackSpeed, setPlaybackSpeed, showToast]);
 
-  useKeyboardShortcuts({
-    togglePlayPause,
-    goToPreviousSubtitle,
-    goToNextSubtitle,
-    toggleRepeatMode,
-    toggleShadowMode,
-    toggleABLoop: toggleABLoopShortcut,
-    increaseSpeed,
-    decreaseSpeed,
-  });
+useKeyboardShortcuts({
+  togglePlayPause,
+  goToPreviousSubtitle: goToPreviousSegment,
+  goToNextSubtitle: goToNextSegment,
+  toggleRepeatMode,
+  toggleShadowMode,
+  toggleABLoop: toggleABLoopShortcut,
+  increaseSpeed,
+  decreaseSpeed,
+});
 
   // Time formatter helpers for custom seeker
   const formatSeek = (secs: number) => {
@@ -696,7 +788,7 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
               {/* Central buttons */}
               <div className="flex items-center gap-4">
                 <button
-                  onClick={goToPreviousSubtitle}
+                  onClick={goToPreviousSegment}
                   className="text-gray-400 hover:text-white p-2 cursor-pointer transition-all hover:scale-110 active:scale-95"
                   title="Previous Subtitle (←)"
                 >
@@ -716,7 +808,7 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
                 </button>
 
                 <button
-                  onClick={goToNextSubtitle}
+                  onClick={goToNextSegment}
                   className="text-gray-400 hover:text-white p-2 cursor-pointer transition-all hover:scale-110 active:scale-95"
                   title="Next Subtitle (→)"
                 >
@@ -726,29 +818,8 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
               {/* Mini active loops indicators */}
               <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleABLoopShortcut}
-                  className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-all border ${
-                    isABLooping
-                      ? "bg-brand-green/20 text-brand-green border-brand-green/30"
-                      : "text-gray-500 border-transparent hover:text-gray-300"
-                  }`}
-                  title="A-B loop current subtitle (L)"
-                >
-                  AB LOOP
-                </button>
+                
 
-                <button
-                  onClick={toggleRepeatMode}
-                  className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-all border ${
-                    repeatMode === "infinite"
-                      ? "bg-duo-green/20 text-duo-green border-duo-green/30"
-                      : "text-gray-500 border-transparent hover:text-gray-300"
-                  }`}
-                  title="Repeat infinitely (R)"
-                >
-                  LOOP ∞
-                </button>
               </div>
             </div>
           </div>
@@ -777,7 +848,14 @@ const [isHistoryOpen, setIsHistoryOpen] = useState(false);
             abCustomCount={abCustomCount}
             onSetAbCustomCount={(n) => setAbCustomCount(n)}
           />
+           <SegmentsPanel
+    segments={segments}
+    activeSegmentId={activeSegmentId}
+    onSelect={applySegment}
+    onDelete={deleteSegment}
+  />
         </div>
+        
       </main>
 
 
