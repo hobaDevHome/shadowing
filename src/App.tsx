@@ -20,14 +20,21 @@ import SettingsDrawer from "./components/SettingsDrawer";
 
 import sampleTranscriptData from "./data/sampleTranscript.json";
 
+import { History } from "lucide-react";
+import { useUrlHistory } from "./hooks/useUrlHistory";
+import HistoryPanel from "./components/HistoryPanel";
+
 // Cast the JSON import to Subtitle[]
 const initialSubtitles: Subtitle[] = sampleTranscriptData as Subtitle[];
+
 
 function App() {
   const [subtitles] = useState<Subtitle[]>(initialSubtitles);
   const [activeSubtitleId, setActiveSubtitleId] = useState<number>(1);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
   const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
+  const { history, addUrl } = useUrlHistory();
+const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
   // App Settings State
   const [settings, setSettings] = useState<AppSettings>({
@@ -515,6 +522,7 @@ function App() {
   const handleUrlChange = useCallback(
     (url: string) => {
       setVideoUrl(url);
+      addUrl(url);
       // Reset stats & active subtitle
       setActiveSubtitleId(1);
       setShadowActive(false);
@@ -632,6 +640,12 @@ function App() {
             className="bg-brand-light-gray hover:bg-brand-light-gray/80 text-white p-2 rounded-full cursor-pointer transition-colors"
           >
             <Settings className="w-4.5 h-4.5 text-brand-green" />
+          </button>
+          <button
+            onClick={() => setIsHistoryOpen(true)}
+            className="bg-brand-light-gray hover:bg-brand-light-gray/80 text-white p-2 rounded-full cursor-pointer transition-colors"
+          >
+            <History className="w-4.5 h-4.5 text-brand-green" />
           </button>
         </div>
       </header>
@@ -775,7 +789,13 @@ function App() {
         settings={settings}
         onUpdateSettings={handleUpdateSettings}
       />
-
+<HistoryPanel
+  history={history}
+  currentUrl={videoUrl}
+  onSelect={handleUrlChange}
+  isOpen={isHistoryOpen}
+  onClose={() => setIsHistoryOpen(false)}
+/>
       {/* Custom Key Bindings Modal Overlay */}
       {isHelpOpen && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
