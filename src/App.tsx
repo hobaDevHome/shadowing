@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useUrlHistory, type AbSegment } from "./hooks/useUrlHistory";
-import SegmentsPanel from "./components/SegmentsPanel";
+import SegmentsPanel from "./components/SEGMENTSPANEL";
 import {
   Play,
   Pause,
