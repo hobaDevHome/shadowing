@@ -1,7 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { Eye, EyeOff, Sparkles, ChevronLeft, ChevronRight, Search } from 'lucide-react';
-import type { Subtitle, VisibilityMode, FontSizeMode } from '../types/transcript';
-import TranscriptItem from './TranscriptItem';
+import React, { useEffect, useState } from "react";
+import { Eye, EyeOff, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import type {
+  Subtitle,
+  VisibilityMode,
+  FontSizeMode,
+} from "../types/transcript";
+import TranscriptItem from "./TranscriptItem";
 
 interface TranscriptPanelProps {
   subtitles: Subtitle[];
@@ -36,29 +40,24 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
   goToPrevious,
   goToNext,
 }) => {
-  const [visibilityMode, setVisibilityMode] = useState<VisibilityMode>('show');
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [visibilityMode, setVisibilityMode] = useState<VisibilityMode>("show");
 
   // Auto scroll current item into center of the panel
   useEffect(() => {
     if (autoScroll && activeSubtitleId !== null) {
-      const activeElement = document.getElementById(`sub-row-${activeSubtitleId}`);
+      const activeElement = document.getElementById(
+        `sub-row-${activeSubtitleId}`,
+      );
       if (activeElement) {
         activeElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest',
+          behavior: "smooth",
+          block: "nearest",
         });
       }
     }
   }, [activeSubtitleId, autoScroll]);
 
-  // Filter subtitles based on search query
-  const filteredSubtitles = useMemo(() => {
-    if (!searchQuery.trim()) return subtitles;
-    return subtitles.filter((sub) =>
-      sub.text.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [subtitles, searchQuery]);
+  // We intentionally do not show subtitle text; render all segments
 
   return (
     <div className="flex flex-col h-full bg-brand-gray border border-brand-light-gray rounded-2xl overflow-hidden shadow-xl">
@@ -72,11 +71,11 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           {/* Visibility Controls */}
           <div className="flex bg-black/40 p-1 rounded-full border border-brand-light-gray/40">
             <button
-              onClick={() => setVisibilityMode('show')}
+              onClick={() => setVisibilityMode("show")}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all ${
-                visibilityMode === 'show'
-                  ? 'bg-brand-green text-black'
-                  : 'text-gray-400 hover:text-white'
+                visibilityMode === "show"
+                  ? "bg-brand-green text-black"
+                  : "text-gray-400 hover:text-white"
               }`}
               title="Show subtitle text"
             >
@@ -85,11 +84,11 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setVisibilityMode('blur')}
+              onClick={() => setVisibilityMode("blur")}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all ${
-                visibilityMode === 'blur'
-                  ? 'bg-duo-orange text-white'
-                  : 'text-gray-400 hover:text-white'
+                visibilityMode === "blur"
+                  ? "bg-duo-orange text-white"
+                  : "text-gray-400 hover:text-white"
               }`}
               title="Blur subtitle text (hover to reveal)"
             >
@@ -98,11 +97,11 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             </button>
 
             <button
-              onClick={() => setVisibilityMode('hide')}
+              onClick={() => setVisibilityMode("hide")}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold cursor-pointer transition-all ${
-                visibilityMode === 'hide'
-                  ? 'bg-red-500/80 text-white'
-                  : 'text-gray-400 hover:text-white'
+                visibilityMode === "hide"
+                  ? "bg-red-500/80 text-white"
+                  : "text-gray-400 hover:text-white"
               }`}
               title="Hide subtitle text"
             >
@@ -132,24 +131,14 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
             </button>
           </div>
 
-          {/* Search bar */}
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search transcript..."
-              className="w-full bg-brand-card border border-brand-light-gray rounded-lg pl-9 pr-3 py-1.5 text-xs text-gray-300 focus:outline-none focus:border-brand-green transition-colors"
-            />
-          </div>
+          {/* Search removed — transcript shows segment numbers only */}
         </div>
       </div>
 
       {/* Transcript Items Container */}
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar flex flex-col gap-3 min-h-[300px] max-h-[500px]">
-        {filteredSubtitles.length > 0 ? (
-          filteredSubtitles.map((sub) => (
+        {subtitles.length > 0 ? (
+          subtitles.map((sub) => (
             <div key={sub.id} id={`sub-row-${sub.id}`}>
               <TranscriptItem
                 subtitle={sub}
@@ -157,6 +146,7 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
                 isPracticed={practicedIds.includes(sub.id)}
                 visibilityMode={visibilityMode}
                 repeatCount={repeatCounts[sub.id] || 0}
+                totalSegments={subtitles.length}
                 onSeek={onSeek}
                 onPlayOnce={onPlayOnce}
                 onRepeatInfinite={onRepeatInfinite}
@@ -169,8 +159,12 @@ export const TranscriptPanel: React.FC<TranscriptPanelProps> = ({
           ))
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center text-gray-500">
-            <p className="font-semibold text-gray-400">No matching lines found</p>
-            <p className="text-xs text-gray-600 mt-1">Try searching for a different keyword.</p>
+            <p className="font-semibold text-gray-400">
+              No matching lines found
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              Try searching for a different keyword.
+            </p>
           </div>
         )}
       </div>

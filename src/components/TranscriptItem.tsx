@@ -1,6 +1,6 @@
-import React from 'react';
-import { Play, RotateCcw, Check } from 'lucide-react';
-import type { Subtitle, VisibilityMode } from '../types/transcript';
+import React from "react";
+import { Play, RotateCcw, Check } from "lucide-react";
+import type { Subtitle, VisibilityMode } from "../types/transcript";
 
 interface TranscriptItemProps {
   subtitle: Subtitle;
@@ -8,13 +8,14 @@ interface TranscriptItemProps {
   isPracticed: boolean;
   visibilityMode: VisibilityMode;
   repeatCount: number;
+  totalSegments: number;
   onSeek: (start: number) => void;
   onPlayOnce: (sub: Subtitle) => void;
   onRepeatInfinite: (sub: Subtitle) => void;
   onRepeatX3: (sub: Subtitle) => void;
   onRepeatX5: (sub: Subtitle) => void;
   onSlowSpeed: (sub: Subtitle, speed: number) => void;
-  fontSize: 'sm' | 'base' | 'lg' | 'xl' | '2xl';
+  fontSize: "sm" | "base" | "lg" | "xl" | "2xl";
 }
 
 // Utility to format seconds to mm:ss
@@ -22,7 +23,7 @@ const formatTime = (seconds: number) => {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   const ms = Math.floor((seconds % 1) * 10);
-  return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms}`;
+  return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}.${ms}`;
 };
 
 export const TranscriptItem: React.FC<TranscriptItemProps> = ({
@@ -31,6 +32,7 @@ export const TranscriptItem: React.FC<TranscriptItemProps> = ({
   isPracticed,
   visibilityMode,
   repeatCount,
+  totalSegments,
   onSeek,
   onPlayOnce,
   onRepeatInfinite,
@@ -41,63 +43,57 @@ export const TranscriptItem: React.FC<TranscriptItemProps> = ({
 }) => {
   // Determine font size class
   const fontSizeClass = {
-    sm: 'text-xs md:text-sm',
-    base: 'text-sm md:text-base',
-    lg: 'text-base md:text-lg',
-    xl: 'text-lg md:text-xl',
-    '2xl': 'text-xl md:text-2xl',
+    "sm": "text-xs md:text-sm",
+    "base": "text-sm md:text-base",
+    "lg": "text-base md:text-lg",
+    "xl": "text-lg md:text-xl",
+    "2xl": "text-xl md:text-2xl",
   }[fontSize];
 
-  // Render text based on visibility filter
+  // Render only segment number (Line X of Y). This removes the actual subtitle text
   const renderText = () => {
-    if (visibilityMode === 'hide') {
-      return (
-        <span className="text-gray-600 italic select-none font-mono">
-          ••••••••••••••••••••••••••••••••
-        </span>
-      );
-    }
-    if (visibilityMode === 'blur') {
-      return (
-        <span className="text-blur select-none cursor-pointer" title="Hover to reveal text">
-          {subtitle.text}
-        </span>
-      );
-    }
-    return <span>{subtitle.text}</span>;
+    return (
+      <span className="font-mono text-gray-300">
+        {`Line ${subtitle.id} of ${totalSegments}`}
+      </span>
+    );
   };
 
   return (
     <div
       className={`group flex flex-col p-4 rounded-xl border transition-all duration-200 gap-3 ${
         isActive
-          ? 'bg-brand-light-gray/60 border-brand-green/50 shadow-lg shadow-black/40 scale-[1.01]'
-          : 'bg-brand-card/30 border-brand-light-gray/40 hover:bg-brand-light-gray/20 hover:border-brand-light-gray/80'
+          ? "bg-brand-light-gray/60 border-brand-green/50 shadow-lg shadow-black/40 scale-[1.01]"
+          : "bg-brand-card/30 border-brand-light-gray/40 hover:bg-brand-light-gray/20 hover:border-brand-light-gray/80"
       }`}
     >
       {/* Top section: Clickable text & timestamp */}
-      <div 
+      <div
         onClick={() => onSeek(subtitle.start)}
         className="flex items-start gap-3 cursor-pointer justify-between"
       >
         <div className="flex gap-3 items-start flex-1">
           {/* Index marker & status */}
-          <span 
+          <span
             className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold shrink-0 ${
-              isActive 
-                ? 'bg-brand-green text-black' 
-                : isPracticed 
-                  ? 'bg-duo-green/20 text-duo-green' 
-                  : 'bg-brand-light-gray text-gray-400'
+              isActive
+                ? "bg-brand-green text-black"
+                : isPracticed
+                  ? "bg-duo-green/20 text-duo-green"
+                  : "bg-brand-light-gray text-gray-400"
             }`}
           >
-            {isPracticed && !isActive ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : subtitle.id}
+            {isPracticed && !isActive ? (
+              <Check className="w-3.5 h-3.5 stroke-[3]" />
+            ) : (
+              subtitle.id
+            )}
           </span>
 
           {/* Subtitle text */}
           <p
             className={`font-medium leading-relaxed flex-1 select-text transition-colors ${fontSizeClass} ${
-              isActive ? 'text-white font-semibold' : 'text-gray-300'
+              isActive ? "text-white font-semibold" : "text-gray-300"
             }`}
           >
             {renderText()}
@@ -158,7 +154,9 @@ export const TranscriptItem: React.FC<TranscriptItemProps> = ({
 
         {/* Slow play modes */}
         <div className="flex items-center gap-1.5 text-xs text-gray-400">
-          <span className="text-[10px] uppercase font-bold text-gray-500">Slow:</span>
+          <span className="text-[10px] uppercase font-bold text-gray-500">
+            Slow:
+          </span>
           <button
             onClick={() => onSlowSpeed(subtitle, 0.75)}
             className="hover:text-brand-green bg-brand-light-gray/40 px-2 py-0.5 rounded cursor-pointer transition-colors hover:bg-brand-light-gray"

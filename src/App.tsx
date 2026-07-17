@@ -1,16 +1,24 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { Play, Pause, SkipForward, SkipBack, Settings, Keyboard, Flame } from 'lucide-react';
-import { usePlayer } from './hooks/usePlayer';
-import { useLoop } from './hooks/useLoop';
-import { useShadow } from './hooks/useShadow';
-import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
-import type { Subtitle, AppSettings, PracticeStats } from './types/transcript';
-import VideoPlayer from './components/VideoPlayer';
-import TranscriptPanel from './components/TranscriptPanel';
-import StatsCard from './components/StatsCard';
-import ShadowControls from './components/ShadowControls';
-import SettingsDrawer from './components/SettingsDrawer';
-import sampleTranscriptData from './data/sampleTranscript.json';
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import {
+  Play,
+  Pause,
+  SkipForward,
+  SkipBack,
+  Settings,
+  Keyboard,
+  Flame,
+} from "lucide-react";
+import { usePlayer } from "./hooks/usePlayer";
+import { useLoop } from "./hooks/useLoop";
+import { useShadow } from "./hooks/useShadow";
+import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
+import type { Subtitle, AppSettings, PracticeStats } from "./types/transcript";
+import VideoPlayer from "./components/VideoPlayer";
+import TranscriptPanel from "./components/TranscriptPanel";
+import StatsCard from "./components/StatsCard";
+import ShadowControls from "./components/ShadowControls";
+import SettingsDrawer from "./components/SettingsDrawer";
+import sampleTranscriptData from "./data/sampleTranscript.json";
 
 // Cast the JSON import to Subtitle[]
 const initialSubtitles: Subtitle[] = sampleTranscriptData as Subtitle[];
@@ -28,7 +36,7 @@ function App() {
     autoNext: true,
     autoScroll: true,
     darkMode: true,
-    fontSize: 'base',
+    fontSize: "base",
   });
 
   // Session Statistics State
@@ -40,7 +48,7 @@ function App() {
 
   // Toast Notification State
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
-    message: '',
+    message: "",
     visible: false,
   });
   const toastTimerRef = useRef<number | null>(null);
@@ -51,7 +59,7 @@ function App() {
     }
     setToast({ message, visible: true });
     toastTimerRef.current = window.setTimeout(() => {
-      setToast({ message: '', visible: false });
+      setToast({ message: "", visible: false });
       toastTimerRef.current = null;
     }, 2500);
   }, []);
@@ -73,7 +81,7 @@ function App() {
     togglePlayPause,
     seekTo,
     setPlaybackSpeed,
-  } = usePlayer('https://www.youtube.com/watch?v=0kG3n41vX38');
+  } = usePlayer("https://www.youtube.com/watch?v=0kG3n41vX38");
 
   // Helpers to mark practiced lines & increment repeats
   const markAsPracticed = useCallback((id: number) => {
@@ -100,27 +108,45 @@ function App() {
   }, []);
 
   // Update speed rates
-  const handleUpdateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-    setSettings((prev) => {
-      const updated = { ...prev, ...newSettings };
-      
-      // If speed changes, push it to player
-      if (newSettings.playbackSpeed !== undefined) {
-        setPlaybackSpeed(newSettings.playbackSpeed);
-        showToast(`Speed set to ${newSettings.playbackSpeed.toFixed(2)}x`);
-      }
-      
-      return updated;
-    });
-  }, [setPlaybackSpeed, showToast]);
+  const handleUpdateSettings = useCallback(
+    (newSettings: Partial<AppSettings>) => {
+      setSettings((prev) => {
+        const updated = { ...prev, ...newSettings };
+
+        // If speed changes, push it to player
+        if (newSettings.playbackSpeed !== undefined) {
+          setPlaybackSpeed(newSettings.playbackSpeed);
+          showToast(`Speed set to ${newSettings.playbackSpeed.toFixed(2)}x`);
+        }
+
+        return updated;
+      });
+    },
+    [setPlaybackSpeed, showToast],
+  );
 
   const currentActiveSub = useMemo(() => {
     return subtitles.find((sub) => sub.id === activeSubtitleId) || subtitles[0];
   }, [subtitles, activeSubtitleId]);
 
+  // Log subtitles once loaded for debugging
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log(
+        "[Debug] subtitles count=",
+        subtitles?.length ?? 0,
+        "firstId=",
+        subtitles?.[0]?.id ?? null,
+      );
+    } catch (e) {}
+  }, [subtitles]);
+
   // Subtitle navigation
   const goToPreviousSubtitle = useCallback(() => {
-    const currentIndex = subtitles.findIndex((sub) => sub.id === activeSubtitleId);
+    const currentIndex = subtitles.findIndex(
+      (sub) => sub.id === activeSubtitleId,
+    );
     if (currentIndex > 0) {
       const prevSub = subtitles[currentIndex - 1];
       setActiveSubtitleId(prevSub.id);
@@ -131,7 +157,9 @@ function App() {
   }, [activeSubtitleId, subtitles, seekTo, play, showToast]);
 
   const goToNextSubtitle = useCallback(() => {
-    const currentIndex = subtitles.findIndex((sub) => sub.id === activeSubtitleId);
+    const currentIndex = subtitles.findIndex(
+      (sub) => sub.id === activeSubtitleId,
+    );
     if (currentIndex < subtitles.length - 1) {
       const nextSub = subtitles[currentIndex + 1];
       setActiveSubtitleId(nextSub.id);
@@ -142,7 +170,11 @@ function App() {
   }, [activeSubtitleId, subtitles, seekTo, play, showToast]);
 
   // Play Once Config
-  const [playOnceConfig, setPlayOnceConfig] = useState<{ active: boolean; end: number; id: number | null }>({
+  const [playOnceConfig, setPlayOnceConfig] = useState<{
+    active: boolean;
+    end: number;
+    id: number | null;
+  }>({
     active: false,
     end: 0,
     id: null,
@@ -155,12 +187,7 @@ function App() {
     }
   }, [settings.autoNext, goToNextSubtitle]);
 
-  const {
-    repeatMode,
-    setRepeatMode,
-    isABLooping,
-    setIsABLooping,
-  } = useLoop({
+  const { repeatMode, setRepeatMode, isABLooping, setIsABLooping } = useLoop({
     isPlaying,
     currentTime,
     seekTo,
@@ -183,7 +210,9 @@ function App() {
     markAsPracticed(currentActiveSub.id);
 
     if (settings.autoNext) {
-      const currentIndex = subtitles.findIndex((s) => s.id === activeSubtitleId);
+      const currentIndex = subtitles.findIndex(
+        (s) => s.id === activeSubtitleId,
+      );
       if (currentIndex < subtitles.length - 1) {
         const nextSub = subtitles[currentIndex + 1];
         setActiveSubtitleId(nextSub.id);
@@ -201,7 +230,18 @@ function App() {
       seekTo(currentActiveSub.start);
       play();
     }
-  }, [activeSubtitleId, subtitles, currentActiveSub, settings.autoNext, seekTo, play, pause, incrementRepeatCount, markAsPracticed, showToast]);
+  }, [
+    activeSubtitleId,
+    subtitles,
+    currentActiveSub,
+    settings.autoNext,
+    seekTo,
+    play,
+    pause,
+    incrementRepeatCount,
+    markAsPracticed,
+    showToast,
+  ]);
 
   const { isShadowWaiting, pauseProgress } = useShadow({
     shadowActive,
@@ -218,7 +258,11 @@ function App() {
 
   // Play Once boundaries check
   useEffect(() => {
-    if (playOnceConfig.active && isPlaying && currentTime >= playOnceConfig.end) {
+    if (
+      playOnceConfig.active &&
+      isPlaying &&
+      currentTime >= playOnceConfig.end
+    ) {
       pause();
       setPlayOnceConfig({ active: false, end: 0, id: null });
       if (playOnceConfig.id !== null) {
@@ -226,7 +270,14 @@ function App() {
         showToast(`Finished practicing line #${playOnceConfig.id}`);
       }
     }
-  }, [currentTime, isPlaying, playOnceConfig, pause, markAsPracticed, showToast]);
+  }, [
+    currentTime,
+    isPlaying,
+    playOnceConfig,
+    pause,
+    markAsPracticed,
+    showToast,
+  ]);
 
   // Session Time Ticker
   useEffect(() => {
@@ -249,109 +300,201 @@ function App() {
   // Sync active subtitle ID from playback time
   useEffect(() => {
     // Only auto-update if we are playing, and not waiting in shadow mode, and not repeating a single subtitle
-    const isLoopingActive = isABLooping || repeatMode !== 'off' || shadowActive || playOnceConfig.active;
+    const isLoopingActive =
+      isABLooping ||
+      repeatMode !== "off" ||
+      shadowActive ||
+      playOnceConfig.active;
     if (isPlaying && !isShadowWaiting && !isLoopingActive) {
       const matchingSub = subtitles.find(
-        (sub) => currentTime >= sub.start && currentTime <= sub.end
+        (sub) => currentTime >= sub.start && currentTime <= sub.end,
       );
+      // Debug logging to help trace mismatches between player time and subtitles
+      try {
+        // eslint-disable-next-line no-console
+        console.log(
+          "[Subtitle Sync] time=",
+          currentTime,
+          "matching=",
+          matchingSub?.id ?? null,
+          "active=",
+          activeSubtitleId,
+        );
+      } catch (e) {}
+
       if (matchingSub && matchingSub.id !== activeSubtitleId) {
         setActiveSubtitleId(matchingSub.id);
+        return;
+      }
+
+      // If no exact match (small gap between segments), pick the closest subtitle
+      // to provide a smoother transcript highlight experience.
+      const TOLERANCE = 0.4; // seconds
+      const nextIndex = subtitles.findIndex((s) => s.start > currentTime);
+      let candidateId: number | null = null;
+
+      if (nextIndex === -1) {
+        // We're past the last subtitle start; pick the last subtitle if close
+        const last = subtitles[subtitles.length - 1];
+        if (last && Math.abs(currentTime - last.end) <= TOLERANCE)
+          candidateId = last.id;
+      } else if (nextIndex === 0) {
+        // Before the very first subtitle start
+        const first = subtitles[0];
+        if (first && Math.abs(first.start - currentTime) <= TOLERANCE)
+          candidateId = first.id;
+      } else {
+        const next = subtitles[nextIndex];
+        const prev = subtitles[nextIndex - 1];
+        const distToNext = Math.abs(next.start - currentTime);
+        const distToPrev =
+          currentTime > prev.end
+            ? Math.abs(currentTime - prev.end)
+            : Math.abs(prev.start - currentTime);
+
+        if (distToNext <= distToPrev && distToNext <= TOLERANCE) {
+          candidateId = next.id;
+        } else if (distToPrev < distToNext && distToPrev <= TOLERANCE) {
+          candidateId = prev.id;
+        }
+      }
+
+      if (candidateId !== null && candidateId !== activeSubtitleId) {
+        setActiveSubtitleId(candidateId);
       }
     }
-  }, [currentTime, isPlaying, subtitles, activeSubtitleId, isShadowWaiting, isABLooping, repeatMode, shadowActive, playOnceConfig]);
+  }, [
+    currentTime,
+    isPlaying,
+    subtitles,
+    activeSubtitleId,
+    isShadowWaiting,
+    isABLooping,
+    repeatMode,
+    shadowActive,
+    playOnceConfig,
+  ]);
+
+  // Log every time update to ensure console shows activity
+  useEffect(() => {
+    try {
+      // eslint-disable-next-line no-console
+      console.log("[Time Tick]", currentTime.toFixed(2));
+    } catch (e) {}
+  }, [currentTime]);
 
   // Action Triggers from Subtitle Clicks
-  const handlePlayOnce = useCallback((sub: Subtitle) => {
-    setShadowActive(false);
-    setRepeatMode('off');
-    setIsABLooping(false);
-    
-    setActiveSubtitleId(sub.id);
-    seekTo(sub.start);
-    play();
-    setPlayOnceConfig({ active: true, end: sub.end, id: sub.id });
-    showToast(`Play once: Line #${sub.id}`);
-  }, [seekTo, play, setRepeatMode, setIsABLooping, showToast]);
+  const handlePlayOnce = useCallback(
+    (sub: Subtitle) => {
+      setShadowActive(false);
+      setRepeatMode("off");
+      setIsABLooping(false);
 
-  const handleRepeatInfinite = useCallback((sub: Subtitle) => {
-    setShadowActive(false);
-    setPlayOnceConfig({ active: false, end: 0, id: null });
-    setIsABLooping(false);
-    
-    setActiveSubtitleId(sub.id);
-    setRepeatMode('infinite');
-    seekTo(sub.start);
-    play();
-    showToast(`Looping infinitely: Line #${sub.id}`);
-  }, [seekTo, play, setRepeatMode, setIsABLooping, showToast]);
+      setActiveSubtitleId(sub.id);
+      seekTo(sub.start);
+      play();
+      setPlayOnceConfig({ active: true, end: sub.end, id: sub.id });
+      showToast(`Play once: Line #${sub.id}`);
+    },
+    [seekTo, play, setRepeatMode, setIsABLooping, showToast],
+  );
 
-  const handleRepeatX3 = useCallback((sub: Subtitle) => {
-    setShadowActive(false);
-    setPlayOnceConfig({ active: false, end: 0, id: null });
-    setIsABLooping(false);
-    
-    setActiveSubtitleId(sub.id);
-    setRepeatMode('x3');
-    seekTo(sub.start);
-    play();
-    showToast(`Looping 3 times: Line #${sub.id}`);
-  }, [seekTo, play, setRepeatMode, setIsABLooping, showToast]);
+  const handleRepeatInfinite = useCallback(
+    (sub: Subtitle) => {
+      setShadowActive(false);
+      setPlayOnceConfig({ active: false, end: 0, id: null });
+      setIsABLooping(false);
 
-  const handleRepeatX5 = useCallback((sub: Subtitle) => {
-    setShadowActive(false);
-    setPlayOnceConfig({ active: false, end: 0, id: null });
-    setIsABLooping(false);
-    
-    setActiveSubtitleId(sub.id);
-    setRepeatMode('x5');
-    seekTo(sub.start);
-    play();
-    showToast(`Looping 5 times: Line #${sub.id}`);
-  }, [seekTo, play, setRepeatMode, setIsABLooping, showToast]);
+      setActiveSubtitleId(sub.id);
+      setRepeatMode("infinite");
+      seekTo(sub.start);
+      play();
+      showToast(`Looping infinitely: Line #${sub.id}`);
+    },
+    [seekTo, play, setRepeatMode, setIsABLooping, showToast],
+  );
 
-  const handleSlowSpeed = useCallback((sub: Subtitle, speed: number) => {
-    setShadowActive(false);
-    setRepeatMode('off');
-    setIsABLooping(false);
-    setPlayOnceConfig({ active: false, end: 0, id: null });
-    
-    setActiveSubtitleId(sub.id);
-    setPlaybackSpeed(speed);
-    seekTo(sub.start);
-    play();
-    showToast(`Speed ${speed}x: Line #${sub.id}`);
-  }, [seekTo, play, setPlaybackSpeed, setRepeatMode, setIsABLooping, showToast]);
+  const handleRepeatX3 = useCallback(
+    (sub: Subtitle) => {
+      setShadowActive(false);
+      setPlayOnceConfig({ active: false, end: 0, id: null });
+      setIsABLooping(false);
+
+      setActiveSubtitleId(sub.id);
+      setRepeatMode("x3");
+      seekTo(sub.start);
+      play();
+      showToast(`Looping 3 times: Line #${sub.id}`);
+    },
+    [seekTo, play, setRepeatMode, setIsABLooping, showToast],
+  );
+
+  const handleRepeatX5 = useCallback(
+    (sub: Subtitle) => {
+      setShadowActive(false);
+      setPlayOnceConfig({ active: false, end: 0, id: null });
+      setIsABLooping(false);
+
+      setActiveSubtitleId(sub.id);
+      setRepeatMode("x5");
+      seekTo(sub.start);
+      play();
+      showToast(`Looping 5 times: Line #${sub.id}`);
+    },
+    [seekTo, play, setRepeatMode, setIsABLooping, showToast],
+  );
+
+  const handleSlowSpeed = useCallback(
+    (sub: Subtitle, speed: number) => {
+      setShadowActive(false);
+      setRepeatMode("off");
+      setIsABLooping(false);
+      setPlayOnceConfig({ active: false, end: 0, id: null });
+
+      setActiveSubtitleId(sub.id);
+      setPlaybackSpeed(speed);
+      seekTo(sub.start);
+      play();
+      showToast(`Speed ${speed}x: Line #${sub.id}`);
+    },
+    [seekTo, play, setPlaybackSpeed, setRepeatMode, setIsABLooping, showToast],
+  );
 
   // URL Change Handler - Resets Practice State
-  const handleUrlChange = useCallback((url: string) => {
-    setVideoUrl(url);
-    // Reset stats & active subtitle
-    setActiveSubtitleId(1);
-    setShadowActive(false);
-    setRepeatMode('off');
-    setIsABLooping(false);
-    setPlayOnceConfig({ active: false, end: 0, id: null });
-    setStats({
-      practicedIds: [],
-      repeatCounts: {},
-      totalPracticeTime: 0,
-    });
-    showToast("Loaded new video. Session reset.");
-  }, [setVideoUrl, setRepeatMode, setIsABLooping, showToast]);
+  const handleUrlChange = useCallback(
+    (url: string) => {
+      setVideoUrl(url);
+      // Reset stats & active subtitle
+      setActiveSubtitleId(1);
+      setShadowActive(false);
+      setRepeatMode("off");
+      setIsABLooping(false);
+      setPlayOnceConfig({ active: false, end: 0, id: null });
+      setStats({
+        practicedIds: [],
+        repeatCounts: {},
+        totalPracticeTime: 0,
+      });
+      showToast("Loaded new video. Session reset.");
+    },
+    [setVideoUrl, setRepeatMode, setIsABLooping, showToast],
+  );
 
   // Bind Keyboard Shortcuts
   const toggleRepeatMode = useCallback(() => {
-    const nextMode = repeatMode === 'infinite' ? 'off' : 'infinite';
+    const nextMode = repeatMode === "infinite" ? "off" : "infinite";
     setRepeatMode(nextMode);
-    showToast(nextMode === 'infinite' ? "Infinite Repeat On" : "Infinite Repeat Off");
+    showToast(
+      nextMode === "infinite" ? "Infinite Repeat On" : "Infinite Repeat Off",
+    );
   }, [repeatMode, setRepeatMode, showToast]);
 
   const toggleShadowMode = useCallback(() => {
-    setShadowActive(prev => {
+    setShadowActive((prev) => {
       const next = !prev;
       if (next) {
         // Clear conflicting loop modes
-        setRepeatMode('off');
+        setRepeatMode("off");
         setIsABLooping(false);
         setPlayOnceConfig({ active: false, end: 0, id: null });
       }
@@ -361,11 +504,11 @@ function App() {
   }, [setRepeatMode, setIsABLooping, showToast]);
 
   const toggleABLoopShortcut = useCallback(() => {
-    setIsABLooping(prev => {
+    setIsABLooping((prev) => {
       const next = !prev;
       if (next) {
         setShadowActive(false);
-        setRepeatMode('off');
+        setRepeatMode("off");
         setPlayOnceConfig({ active: false, end: 0, id: null });
       }
       showToast(next ? "A-B Loop Enabled" : "A-B Loop Disabled");
@@ -402,12 +545,11 @@ function App() {
   const formatSeek = (secs: number) => {
     const mins = Math.floor(secs / 60);
     const remainingSecs = Math.floor(secs % 60);
-    return `${mins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
   };
 
   return (
     <div className="min-h-screen bg-brand-dark flex flex-col p-4 md:p-8 select-none">
-      
       {/* Header Panel */}
       <header className="flex items-center justify-between border-b border-brand-light-gray/40 pb-4 mb-6 shrink-0">
         <div className="flex items-center gap-2">
@@ -415,8 +557,12 @@ function App() {
             <Flame className="w-6 h-6 animate-pulse" />
           </div>
           <div>
-            <h1 className="text-xl md:text-2xl font-black tracking-tight text-white m-0">ShadowSpeak</h1>
-            <p className="text-xs text-gray-400">Perfect your English intonation & pacing with YouTube shadowing</p>
+            <h1 className="text-xl md:text-2xl font-black tracking-tight text-white m-0">
+              ShadowSpeak
+            </h1>
+            <p className="text-xs text-gray-400">
+              Perfect your English intonation & pacing with YouTube shadowing
+            </p>
           </div>
         </div>
 
@@ -429,7 +575,7 @@ function App() {
             <Keyboard className="w-4 h-4 text-brand-green" />
             <span>Shortcuts</span>
           </button>
-          
+
           <button
             onClick={() => setIsSettingsOpen(true)}
             className="bg-brand-light-gray hover:bg-brand-light-gray/80 text-white p-2 rounded-full cursor-pointer transition-colors"
@@ -441,7 +587,6 @@ function App() {
 
       {/* Main Grid Workspace */}
       <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start pb-6">
-        
         {/* Left Side: Video Player, Custom Seeker & Speed Controls */}
         <div className="lg:col-span-6 flex flex-col gap-6 w-full">
           <VideoPlayer
@@ -475,8 +620,12 @@ function App() {
             <div className="flex items-center justify-between">
               {/* Speed rate indicators */}
               <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase font-bold text-gray-500">Speed:</span>
-                <span className="text-xs text-brand-green font-bold font-mono">{playbackSpeed.toFixed(2)}x</span>
+                <span className="text-[10px] uppercase font-bold text-gray-500">
+                  Speed:
+                </span>
+                <span className="text-xs text-brand-green font-bold font-mono">
+                  {playbackSpeed.toFixed(2)}x
+                </span>
               </div>
 
               {/* Central buttons */}
@@ -494,7 +643,11 @@ function App() {
                   className="bg-white hover:bg-gray-200 text-black p-3 rounded-full cursor-pointer transition-all hover:scale-105 active:scale-90 shadow-md"
                   title="Play / Pause (Space)"
                 >
-                  {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current" />}
+                  {isPlaying ? (
+                    <Pause className="w-5 h-5 fill-current" />
+                  ) : (
+                    <Play className="w-5 h-5 fill-current" />
+                  )}
                 </button>
 
                 <button
@@ -512,8 +665,8 @@ function App() {
                   onClick={toggleABLoopShortcut}
                   className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-all border ${
                     isABLooping
-                      ? 'bg-brand-green/20 text-brand-green border-brand-green/30'
-                      : 'text-gray-500 border-transparent hover:text-gray-300'
+                      ? "bg-brand-green/20 text-brand-green border-brand-green/30"
+                      : "text-gray-500 border-transparent hover:text-gray-300"
                   }`}
                   title="A-B loop current subtitle (L)"
                 >
@@ -523,9 +676,9 @@ function App() {
                 <button
                   onClick={toggleRepeatMode}
                   className={`px-2 py-0.5 text-[10px] font-bold rounded cursor-pointer transition-all border ${
-                    repeatMode === 'infinite'
-                      ? 'bg-duo-green/20 text-duo-green border-duo-green/30'
-                      : 'text-gray-500 border-transparent hover:text-gray-300'
+                    repeatMode === "infinite"
+                      ? "bg-duo-green/20 text-duo-green border-duo-green/30"
+                      : "text-gray-500 border-transparent hover:text-gray-300"
                   }`}
                   title="Repeat infinitely (R)"
                 >
@@ -561,7 +714,9 @@ function App() {
             shadowActive={shadowActive}
             onToggleShadow={toggleShadowMode}
             pauseDuration={settings.pauseDuration}
-            onPauseDurationChange={(dur) => handleUpdateSettings({ pauseDuration: dur })}
+            onPauseDurationChange={(dur) =>
+              handleUpdateSettings({ pauseDuration: dur })
+            }
             isShadowWaiting={isShadowWaiting}
             pauseProgress={pauseProgress}
           />
@@ -606,35 +761,51 @@ function App() {
             <div className="flex flex-col gap-3.5">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Play / Pause</span>
-                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">Space</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
+                  Space
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Previous subtitle</span>
-                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">←</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
+                  ←
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Next subtitle</span>
-                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">→</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
+                  →
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Toggle repeat loop</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">R</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+                  R
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Toggle shadow mode</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">S</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+                  S
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Loop current sentence</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">L</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+                  L
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Increase speed (+0.25)</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">+</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+                  +
+                </kbd>
               </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="text-gray-400">Decrease speed (-0.25)</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">-</kbd>
+                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
+                  -
+                </kbd>
               </div>
             </div>
 
@@ -651,13 +822,23 @@ function App() {
       {/* Floating Action Shortcut Toast Notification */}
       <div
         className={`fixed bottom-24 left-1/2 -translate-x-1/2 bg-black/80 border border-brand-light-gray/60 backdrop-blur-md px-5 py-2.5 rounded-full text-xs font-bold text-white shadow-2xl flex items-center gap-2 transition-all duration-300 transform z-50 ${
-          toast.visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+          toast.visible
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
         <span className="w-1.5 h-1.5 bg-brand-green rounded-full"></span>
         {toast.message}
       </div>
 
+      <div className="fixed bottom-4 right-4 bg-black/70 text-white text-xs p-2 rounded z-50 max-w-xs">
+        <div className="font-mono">Time: {currentTime.toFixed(2)}</div>
+        <div className="font-mono">ActiveId: {activeSubtitleId}</div>
+        <div className="font-mono">Subs: {subtitles?.length ?? 0}</div>
+        <div className="truncate text-[11px] mt-1">
+          {currentActiveSub?.text ?? "— no active subtitle —"}
+        </div>
+      </div>
     </div>
   );
 }
