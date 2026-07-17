@@ -61,7 +61,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       </form>
 
       {/* Video IFrame Container */}
-      <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-brand-light-gray shadow-2xl group [&>iframe]:w-full [&>iframe]:h-full [&>div]:w-full [&>div]:h-full">
+      <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-brand-light-gray shadow-2xl [&>iframe]:w-full [&>iframe]:h-full [&>div]:w-full [&>div]:h-full">
         {isPlayerLoading && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-gray z-10 gap-3">
             {/* Spinning skeleton loader */}
@@ -85,12 +85,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         )}
         
-        {/* Floating Custom Controls overlay guide */}
-        {videoId && !isPlayerLoading && (
-          <div className="absolute bottom-2 right-2 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded text-[10px] text-gray-400 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity">
-            Custom Controls Active
-          </div>
-        )}
+        {/* Floating Custom Controls overlay guide removed */}
       </div>
     </div>
   );

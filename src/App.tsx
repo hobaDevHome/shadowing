@@ -831,14 +831,7 @@ function App() {
         {toast.message}
       </div>
 
-      <div className="fixed bottom-4 right-4 bg-black/70 text-white text-xs p-2 rounded z-50 max-w-xs">
-        <div className="font-mono">Time: {currentTime.toFixed(2)}</div>
-        <div className="font-mono">ActiveId: {activeSubtitleId}</div>
-        <div className="font-mono">Subs: {subtitles?.length ?? 0}</div>
-        <div className="truncate text-[11px] mt-1">
-          {currentActiveSub?.text ?? "— no active subtitle —"}
-        </div>
-      </div>
+      {/* Dev overlay removed */}
     </div>
   );
 }
