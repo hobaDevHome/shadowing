@@ -280,6 +280,13 @@ const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
   const loopStart = abEnabled ? (abStart ?? currentActiveSub.start) : currentActiveSub.start;
   const loopEnd = abEnabled ? (abEnd ?? currentActiveSub.end) : currentActiveSub.end;
 
+  // Called when a finite AB segment (x3/x5/custom) finishes its repeats.
+// useLoop already paused playback internally — we just resume so the
+// video continues naturally instead of jumping anywhere.
+const handleAbRepeatComplete = useCallback(() => {
+  play();
+}, [play]);
+
   // Reinitialize loop hook with A-B times and custom target
   const {
     repeatMode: abLoopMode,
@@ -294,7 +301,7 @@ const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
     pause,
     start: loopStart,
     end: loopEnd,
-    onRepeatComplete: handleRepeatComplete,
+    onRepeatComplete: handleAbRepeatComplete,
     incrementStatsRepeat: () => {},
     customTarget: abCustomCount,
   });
