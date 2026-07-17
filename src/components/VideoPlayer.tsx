@@ -1,5 +1,5 @@
-import React from 'react';
-import YouTube from 'react-youtube';
+import React from "react";
+import YouTube from "react-youtube";
 
 interface VideoPlayerProps {
   videoId: string;
@@ -28,8 +28,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const opts = {
-    height: '100%',
-    width: '100%',
+    height: "100%",
+    width: "100%",
     playerVars: {
       autoplay: 0,
       controls: 0, // Hide YouTube player controls
@@ -66,10 +66,12 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-gray z-10 gap-3">
             {/* Spinning skeleton loader */}
             <div className="w-12 h-12 border-4 border-brand-green/30 border-t-brand-green rounded-full animate-spin"></div>
-            <p className="text-sm text-gray-400 animate-pulse font-medium">Loading YouTube player...</p>
+            <p className="text-sm text-gray-400 animate-pulse font-medium">
+              Loading YouTube player...
+            </p>
           </div>
         )}
-        
+
         {videoId ? (
           <YouTube
             videoId={videoId}
@@ -81,10 +83,13 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
           <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-gray-400 gap-2">
             <span className="text-4xl">📺</span>
             <p className="font-semibold text-lg text-white">No Video Loaded</p>
-            <p className="text-sm max-w-xs text-gray-500">Paste a valid YouTube link above to start practicing English Shadowing.</p>
+            <p className="text-sm max-w-xs text-gray-500">
+              Paste a valid YouTube link above to start practicing English
+              Shadowing.
+            </p>
           </div>
         )}
-        
+
         {/* Floating Custom Controls overlay guide removed */}
       </div>
     </div>

@@ -9,6 +9,17 @@ interface ShadowControlsProps {
   onPauseDurationChange: (duration: PauseDurationMode) => void;
   isShadowWaiting: boolean;
   pauseProgress: number; // 0 to 1
+  // A-B loop props
+  abEnabled?: boolean;
+  abStart?: number | null;
+  abEnd?: number | null;
+  onSetA?: () => void;
+  onSetB?: () => void;
+  onClearAB?: () => void;
+  onApplyAB?: (mode: 'off' | 'infinite' | 'x3' | 'x5' | 'custom') => void;
+  abRepeatMode?: 'off' | 'infinite' | 'x3' | 'x5' | 'custom';
+  abCustomCount?: number;
+  onSetAbCustomCount?: (n: number) => void;
 }
 
 export const ShadowControls: React.FC<ShadowControlsProps> = ({
@@ -18,6 +29,16 @@ export const ShadowControls: React.FC<ShadowControlsProps> = ({
   onPauseDurationChange,
   isShadowWaiting,
   pauseProgress,
+  abEnabled = false,
+  abStart = null,
+  abEnd = null,
+  onSetA,
+  onSetB,
+  onClearAB,
+  onApplyAB,
+  abRepeatMode = 'off',
+  abCustomCount = 3,
+  onSetAbCustomCount,
 }) => {
   const presets: PauseDurationMode[] = [0.5, 1, 2, 3];
 
@@ -111,6 +132,72 @@ export const ShadowControls: React.FC<ShadowControlsProps> = ({
           )}
         </div>
       )}
+
+      {/* A-B Loop Controls */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-gray-500 font-bold uppercase tracking-wider">A-B Loop</span>
+          <div className="text-xs text-gray-400">{abEnabled ? 'Active' : 'Inactive'}</div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={onSetA}
+            className="py-2 text-xs font-semibold rounded cursor-pointer transition-all duration-200 bg-brand-light-gray text-white"
+          >
+            Set A ({abStart ? abStart.toFixed(1) + 's' : '—'})
+          </button>
+          <button
+            onClick={onSetB}
+            className="py-2 text-xs font-semibold rounded cursor-pointer transition-all duration-200 bg-brand-light-gray text-white"
+          >
+            Set B ({abEnd ? abEnd.toFixed(1) + 's' : '—'})
+          </button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onApplyAB && onApplyAB('x3')}
+            className="py-1.5 px-2 text-xs font-semibold rounded bg-brand-card text-gray-300"
+          >
+            x3
+          </button>
+          <button
+            onClick={() => onApplyAB && onApplyAB('x5')}
+            className="py-1.5 px-2 text-xs font-semibold rounded bg-brand-card text-gray-300"
+          >
+            x5
+          </button>
+          <button
+            onClick={() => onApplyAB && onApplyAB('infinite')}
+            className="py-1.5 px-2 text-xs font-semibold rounded bg-brand-card text-gray-300"
+          >
+            ∞
+          </button>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              min={1}
+              value={abCustomCount}
+              onChange={(e) => onSetAbCustomCount && onSetAbCustomCount(Number(e.target.value))}
+              className="w-16 bg-black/20 border border-brand-light-gray rounded px-2 py-1 text-xs text-white"
+            />
+            <button
+              onClick={() => onApplyAB && onApplyAB('custom')}
+              className="py-1.5 px-2 text-xs font-semibold rounded bg-brand-card text-gray-300"
+            >
+              Apply
+            </button>
+          </div>
+
+          <button
+            onClick={onClearAB}
+            className="ml-auto py-1.5 px-3 text-xs font-semibold rounded bg-red-600 text-white"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

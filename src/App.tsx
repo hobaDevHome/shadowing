@@ -13,8 +13,8 @@ import { useLoop } from "./hooks/useLoop";
 import { useShadow } from "./hooks/useShadow";
 import { useKeyboardShortcuts } from "./hooks/useKeyboardShortcuts";
 import type { Subtitle, AppSettings, PracticeStats } from "./types/transcript";
+
 import VideoPlayer from "./components/VideoPlayer";
-import TranscriptPanel from "./components/TranscriptPanel";
 import StatsCard from "./components/StatsCard";
 import ShadowControls from "./components/ShadowControls";
 import SettingsDrawer from "./components/SettingsDrawer";
@@ -81,7 +81,7 @@ function App() {
     togglePlayPause,
     seekTo,
     setPlaybackSpeed,
-  } = usePlayer("https://www.youtube.com/watch?v=0kG3n41vX38");
+  } = usePlayer("https://www.youtube.com/watch?v=W8UVSkBjyrY");
 
   // Helpers to mark practiced lines & increment repeats
   const markAsPracticed = useCallback((id: number) => {
@@ -202,6 +202,14 @@ function App() {
     },
   });
 
+  // A-B Loop state
+  const [abEnabled, setAbEnabled] = useState<boolean>(false);
+  const [abStart, setAbStart] = useState<number | null>(null);
+  const [abEnd, setAbEnd] = useState<number | null>(null);
+  const [abRepeatMode, setAbRepeatMode] = useState<"off" | "infinite" | "x3" | "x5" | "custom">("off");
+  const [abCustomCount, setAbCustomCount] = useState<number>(3);
+
+
   // Shadow Mode Hook
   const [shadowActive, setShadowActive] = useState<boolean>(false);
 
@@ -255,6 +263,49 @@ function App() {
     pauseDuration: settings.pauseDuration,
     incrementStatsRepeat: handleShadowRepeatComplete,
   });
+
+  // Pass A-B start/end into useLoop by recalculating hook inputs when AB enabled
+  const loopStart = abEnabled ? (abStart ?? currentActiveSub.start) : currentActiveSub.start;
+  const loopEnd = abEnabled ? (abEnd ?? currentActiveSub.end) : currentActiveSub.end;
+
+  // Reinitialize loop hook with A-B times and custom target
+  const {
+    repeatMode: abLoopMode,
+    setRepeatMode: setAbLoopMode,
+    isABLooping: isAbLoopingActive,
+    setIsABLooping: setIsAbLoopingActive,
+  } = useLoop({
+    isPlaying,
+    currentTime,
+    seekTo,
+    play,
+    pause,
+    start: loopStart,
+    end: loopEnd,
+    onRepeatComplete: handleRepeatComplete,
+    incrementStatsRepeat: () => {},
+    customTarget: abCustomCount,
+  });
+
+  // AB handlers (init after AB loop hook)
+  const handleSetAFromNow = useCallback(() => setAbStart(currentTime), [currentTime]);
+  const handleSetBFromNow = useCallback(() => setAbEnd(currentTime), [currentTime]);
+  const handleClearAB = useCallback(() => {
+    setAbEnabled(false);
+    setAbStart(null);
+    setAbEnd(null);
+    setAbRepeatMode('off');
+    setAbCustomCount(3);
+    setIsAbLoopingActive(false);
+    setAbLoopMode('off');
+  }, [setIsAbLoopingActive, setAbLoopMode]);
+
+  const handleApplyAB = useCallback((mode: "off" | "infinite" | "x3" | "x5" | "custom") => {
+    setAbEnabled(true);
+    setAbRepeatMode(mode);
+    setAbLoopMode(mode === 'custom' ? 'custom' : mode as any);
+    setIsAbLoopingActive(true);
+  }, [setAbLoopMode, setIsAbLoopingActive]);
 
   // Play Once boundaries check
   useEffect(() => {
@@ -689,27 +740,8 @@ function App() {
           </div>
         </div>
 
-        {/* Right Side: Transcript, Loops, Settings & Shadow Configs */}
+        {/* Right Side: Controls */}
         <div className="lg:col-span-6 flex flex-col gap-6 w-full">
-          {/* Transcript display */}
-          <TranscriptPanel
-            subtitles={subtitles}
-            activeSubtitleId={activeSubtitleId}
-            practicedIds={stats.practicedIds}
-            repeatCounts={stats.repeatCounts}
-            onSeek={seekTo}
-            onPlayOnce={handlePlayOnce}
-            onRepeatInfinite={handleRepeatInfinite}
-            onRepeatX3={handleRepeatX3}
-            onRepeatX5={handleRepeatX5}
-            onSlowSpeed={handleSlowSpeed}
-            fontSize={settings.fontSize}
-            autoScroll={settings.autoScroll}
-            goToPrevious={goToPreviousSubtitle}
-            goToNext={goToNextSubtitle}
-          />
-
-          {/* Shadow Controls */}
           <ShadowControls
             shadowActive={shadowActive}
             onToggleShadow={toggleShadowMode}
@@ -719,6 +751,16 @@ function App() {
             }
             isShadowWaiting={isShadowWaiting}
             pauseProgress={pauseProgress}
+            abEnabled={abEnabled}
+            abStart={abStart}
+            abEnd={abEnd}
+            onSetA={handleSetAFromNow}
+            onSetB={handleSetBFromNow}
+            onClearAB={handleClearAB}
+            onApplyAB={handleApplyAB}
+            abRepeatMode={abRepeatMode}
+            abCustomCount={abCustomCount}
+            onSetAbCustomCount={(n) => setAbCustomCount(n)}
           />
         </div>
       </main>

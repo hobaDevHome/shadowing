@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-export type RepeatMode = 'off' | 'infinite' | 'x3' | 'x5';
+export type RepeatMode = 'off' | 'infinite' | 'x3' | 'x5' | 'custom';
 
 interface UseLoopProps {
   isPlaying: boolean;
@@ -12,6 +12,8 @@ interface UseLoopProps {
   end: number;
   onRepeatComplete?: () => void;
   incrementStatsRepeat?: () => void;
+  // When repeatMode is 'custom', use this target count
+  customTarget?: number;
 }
 
 export function useLoop({
@@ -24,6 +26,7 @@ export function useLoop({
   end,
   onRepeatComplete,
   incrementStatsRepeat,
+  customTarget,
 }: UseLoopProps) {
   const [repeatMode, setRepeatModeState] = useState<RepeatMode>('off');
   const [currentRepeatIndex, setCurrentRepeatIndex] = useState<number>(0);
@@ -60,8 +63,8 @@ export function useLoop({
         seekTo(currentStart);
         play();
         if (incrementStatsRepeat) incrementStatsRepeat();
-      } else if (activeMode === 'x3' || activeMode === 'x5') {
-        const target = activeMode === 'x3' ? 3 : 5;
+      } else if (activeMode === 'x3' || activeMode === 'x5' || activeMode === 'custom') {
+        const target = activeMode === 'x3' ? 3 : activeMode === 'x5' ? 5 : (customTarget || 0);
         const nextIdx = idx + 1;
         if (nextIdx < target) {
           setCurrentRepeatIndex(nextIdx);
