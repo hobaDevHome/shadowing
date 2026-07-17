@@ -778,7 +778,7 @@ useKeyboardShortcuts({
               {/* Speed rate indicators */}
               <div className="flex items-center gap-1">
                 <span className="text-[10px] uppercase font-bold text-gray-500">
-                  Speed:
+                  Speed :
                 </span>
                 <span className="text-xs text-brand-green font-bold font-mono">
                   {playbackSpeed.toFixed(2)}x
