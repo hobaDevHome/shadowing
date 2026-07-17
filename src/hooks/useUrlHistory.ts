@@ -23,29 +23,31 @@ export function useUrlHistory() {
       .catch(() => setHistory([]));
   }, []);
 
-  const sync = useCallback((url: string, segments?: AbSegment[]) => {
-    setHistory((prev) => {
-      const idx = prev.findIndex((r) => r.url === url);
-      if (idx === -1) {
-        return [{ url, segments: segments || [] }, ...prev];
-      }
-      const existing = prev[idx];
-      const updated = {
-        url,
-        segments: segments !== undefined ? segments : existing.segments,
-      };
-      return [updated, ...prev.slice(0, idx), ...prev.slice(idx + 1)];
-    });
+const sync = useCallback((url: string, segments?: AbSegment[]) => {
+  setHistory((prev) => {
+    const idx = prev.findIndex((r) => r.url === url);
+    if (idx === -1) return [{ url, segments: segments || [] }, ...prev];
+    const existing = prev[idx];
+    const updated = { url, segments: segments !== undefined ? segments : existing.segments };
+    return [updated, ...prev.slice(0, idx), ...prev.slice(idx + 1)];
+  });
 
-    fetch("/api/history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, segments }),
+  fetch("/api/history", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url, segments }),
+  })
+    .then(async (r) => {
+      if (!r.ok) {
+        const text = await r.text();
+        console.error("[history] save failed:", r.status, text);
+        return;
+      }
+      const data = await r.json();
+      if (Array.isArray(data)) setHistory(data);
     })
-      .then((r) => r.json())
-      .then((data) => Array.isArray(data) && setHistory(data))
-      .catch(() => {});
-  }, []);
+    .catch((err) => console.error("[history] network error:", err));
+}, []);
 
   const addUrl = useCallback((url: string) => sync(url), [sync]);
   const saveSegments = useCallback(
