@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useUrlHistory, type AbSegment } from "./hooks/useUrlHistory";
+import SegmentsPanel from "./components/SegmentsPanel";
 import {
   Play,
   Pause,
@@ -23,7 +24,6 @@ import sampleTranscriptData from "./data/sampleTranscript.json";
 
 import { History } from "lucide-react";
 import HistoryPanel from "./components/HistoryPanel";
-import SegmentsPanel from "./components/SegmentsPanel";
 
 // Cast the JSON import to Subtitle[]
 const initialSubtitles: Subtitle[] = sampleTranscriptData as Subtitle[];
