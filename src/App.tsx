@@ -868,7 +868,7 @@ useKeyboardShortcuts({
         onUpdateSettings={handleUpdateSettings}
       />
 <HistoryPanel
-  history={history}
+ history={history.map(record => record.url)}
   currentUrl={videoUrl}
   onSelect={handleUrlChange}
   isOpen={isHistoryOpen}
