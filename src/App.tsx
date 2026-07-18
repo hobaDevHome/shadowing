@@ -101,7 +101,7 @@ useEffect(() => {
     togglePlayPause,
     seekTo,
     setPlaybackSpeed,
-  } = usePlayer("https://www.youtube.com/watch?v=W8UVSkBjyrY");
+  } = usePlayer("");
 
   // Helpers to mark practiced lines & increment repeats
   const markAsPracticed = useCallback((id: number) => {

@@ -62,7 +62,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
       {/* Video IFrame Container */}
       <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black border border-brand-light-gray shadow-2xl [&>iframe]:w-full [&>iframe]:h-full [&>div]:w-full [&>div]:h-full">
-        {isPlayerLoading && (
+        {isPlayerLoading && videoId && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-brand-gray z-10 gap-3">
             {/* Spinning skeleton loader */}
             <div className="w-12 h-12 border-4 border-brand-green/30 border-t-brand-green rounded-full animate-spin"></div>
