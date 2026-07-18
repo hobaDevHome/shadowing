@@ -789,6 +789,7 @@ useKeyboardShortcuts({
       {playbackSpeed.toFixed(2)}x
     </span>
   </button>
+  
 
   {isSpeedMenuOpen && (
     <div className="absolute bottom-full left-0 mb-2 bg-brand-gray border border-brand-light-gray rounded-xl shadow-2xl overflow-hidden z-20 min-w-[80px]">
@@ -808,7 +809,9 @@ useKeyboardShortcuts({
           {speed.toFixed(2)}x
         </button>
       ))}
+      
     </div>
+    
   )}
 </div>
 
@@ -842,6 +845,12 @@ useKeyboardShortcuts({
                 >
                   <SkipForward className="w-5 h-5 fill-current" />
                 </button>
+
+              </div>
+
+              {/* Mini active loops indicators */}
+              <div className="flex items-center gap-2">
+                
                 <button
   onClick={toggleCaptions}
   className={`text-[10px] font-black w-7 h-7 rounded-md border transition-all cursor-pointer flex items-center justify-center ${
@@ -853,12 +862,6 @@ useKeyboardShortcuts({
 >
   CC
 </button>
-              </div>
-
-              {/* Mini active loops indicators */}
-              <div className="flex items-center gap-2">
-                
-
               </div>
             </div>
           </div>
