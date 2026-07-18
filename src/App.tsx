@@ -31,7 +31,7 @@ function App() {
   const [subtitles] = useState<Subtitle[]>(initialSubtitles);
   const [activeSubtitleId, setActiveSubtitleId] = useState<number>(1);
 
-const { history, addUrl, saveSegments } = useUrlHistory();
+const { history, addUrl, saveSegments, deleteUrl } = useUrlHistory();
 const [segments, setSegments] = useState<AbSegment[]>([]);
 const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
 
@@ -879,11 +879,12 @@ useKeyboardShortcuts({
     onSelect={applySegment}
     onDelete={deleteSegment}
   />
-    <HistoryPanel
-    history={history.map((record) => record.url)}
-    currentUrl={videoUrl}
-    onSelect={handleUrlChange}
-  />
+<HistoryPanel
+  history={history.map((record) => record.url)}
+  currentUrl={videoUrl}
+  onSelect={handleUrlChange}
+  onDelete={deleteUrl}
+/>
         </div>
         
       </main>
