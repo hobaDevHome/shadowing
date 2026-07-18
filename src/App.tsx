@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import RecordingPanel from "./components/RecordingPanel";
 import { useUrlHistory, type AbSegment } from "./hooks/useUrlHistory";
 import SegmentsPanel from "./components/SPanel";
 import {
@@ -44,6 +45,7 @@ const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
     darkMode: true,
     fontSize: "base",
   });
+
 
   // Session Statistics State
   const [stats, setStats] = useState<PracticeStats>({
@@ -191,6 +193,7 @@ useEffect(() => {
     }
   }, [activeSubtitleId, subtitles, seekTo, play, showToast]);
 
+  
   // Play Once Config
   const [playOnceConfig, setPlayOnceConfig] = useState<{
     active: boolean;
@@ -224,6 +227,7 @@ useEffect(() => {
     },
   });
 
+  
   // A-B Loop state
   const [abEnabled, setAbEnabled] = useState<boolean>(false);
   const [abStart, setAbStart] = useState<number | null>(null);
@@ -515,6 +519,15 @@ useEffect(() => {
     },
     [seekTo, play, setRepeatMode, setIsABLooping, showToast],
   );
+
+  const playCurrentSegmentOnce = useCallback(() => {
+  setIsAbLoopingActive(false);
+  seekTo(loopStart);
+  play();
+  window.setTimeout(() => {
+    pause();
+  }, (loopEnd - loopStart) * 1000);
+}, [loopStart, loopEnd, seekTo, play, pause, setIsAbLoopingActive]);
 
   const applySegment = useCallback(
   (segment: AbSegment) => {
@@ -896,6 +909,10 @@ useKeyboardShortcuts({
     onSelect={applySegment}
     onDelete={deleteSegment}
   />
+  <RecordingPanel
+  onPlayOriginal={playCurrentSegmentOnce}
+  segmentDurationSec={loopEnd - loopStart}
+/>
 <HistoryPanel
   history={history.map((record) => record.url)}
   currentUrl={videoUrl}
