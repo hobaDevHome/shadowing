@@ -6,8 +6,6 @@ import {
   Pause,
   SkipForward,
   SkipBack,
-  Settings,
-  Keyboard,
   Flame,
 } from "lucide-react";
 import { usePlayer } from "./hooks/usePlayer";
@@ -18,7 +16,7 @@ import type { Subtitle, AppSettings, PracticeStats } from "./types/transcript";
 
 import VideoPlayer from "./components/VideoPlayer";
 import ShadowControls from "./components/ShadowControls";
-import SettingsDrawer from "./components/SettingsDrawer";
+
 
 import sampleTranscriptData from "./data/sampleTranscript.json";
 
@@ -32,10 +30,6 @@ const initialSubtitles: Subtitle[] = sampleTranscriptData as Subtitle[];
 function App() {
   const [subtitles] = useState<Subtitle[]>(initialSubtitles);
   const [activeSubtitleId, setActiveSubtitleId] = useState<number>(1);
-  const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
-  const [isHelpOpen, setIsHelpOpen] = useState<boolean>(false);
-  
-const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
 const { history, addUrl, saveSegments } = useUrlHistory();
 const [segments, setSegments] = useState<AbSegment[]>([]);
@@ -75,6 +69,20 @@ const [activeSegmentId, setActiveSegmentId] = useState<string | null>(null);
       toastTimerRef.current = null;
     }, 2500);
   }, []);
+  // speed dropdown mneu
+  const speedMenuRef = useRef<HTMLDivElement>(null);
+const [isSpeedMenuOpen, setIsSpeedMenuOpen] = useState(false);
+const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+
+useEffect(() => {
+  const handleClickOutside = (e: MouseEvent) => {
+    if (speedMenuRef.current && !speedMenuRef.current.contains(e.target as Node)) {
+      setIsSpeedMenuOpen(false);
+    }
+  };
+  document.addEventListener("mousedown", handleClickOutside);
+  return () => document.removeEventListener("mousedown", handleClickOutside);
+}, []);
 
   // Initialize Player Hook
   const {
@@ -726,26 +734,9 @@ useKeyboardShortcuts({
 
         {/* Global Toolbar buttons */}
         <div className="flex gap-2">
-          <button
-            onClick={() => setIsHelpOpen(true)}
-            className="flex items-center gap-1.5 bg-brand-light-gray hover:bg-brand-light-gray/80 text-white font-semibold text-xs px-3.5 py-2 rounded-full transition-all cursor-pointer"
-          >
-            <Keyboard className="w-4 h-4 text-brand-green" />
-            <span>Shortcuts</span>
-          </button>
-
-          <button
-            onClick={() => setIsSettingsOpen(true)}
-            className="bg-brand-light-gray hover:bg-brand-light-gray/80 text-white p-2 rounded-full cursor-pointer transition-colors"
-          >
-            <Settings className="w-4.5 h-4.5 text-brand-green" />
-          </button>
-          <button
-            onClick={() => setIsHistoryOpen(true)}
-            className="bg-brand-light-gray hover:bg-brand-light-gray/80 text-white p-2 rounded-full cursor-pointer transition-colors"
-          >
-            <History className="w-4.5 h-4.5 text-brand-green" />
-          </button>
+          
+         
+          
         </div>
       </header>
 
@@ -783,14 +774,41 @@ useKeyboardShortcuts({
             {/* Media controllers */}
             <div className="flex items-center justify-between">
               {/* Speed rate indicators */}
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] uppercase font-bold text-gray-500">
-                  Speed :
-                </span>
-                <span className="text-xs text-brand-green font-bold font-mono">
-                  {playbackSpeed.toFixed(2)}x
-                </span>
-              </div>
+              {/* Speed dropdown */}
+<div className="relative" ref={speedMenuRef}>
+  <button
+    onClick={() => setIsSpeedMenuOpen((prev) => !prev)}
+    className="flex items-center gap-1 cursor-pointer group"
+  >
+    <span className="text-[10px] uppercase font-bold text-gray-500 group-hover:text-gray-300">
+      Speed :
+    </span>
+    <span className="text-xs text-brand-green font-bold font-mono">
+      {playbackSpeed.toFixed(2)}x
+    </span>
+  </button>
+
+  {isSpeedMenuOpen && (
+    <div className="absolute bottom-full left-0 mb-2 bg-brand-gray border border-brand-light-gray rounded-xl shadow-2xl overflow-hidden z-20 min-w-[80px]">
+      {speedOptions.map((speed) => (
+        <button
+          key={speed}
+          onClick={() => {
+            handleUpdateSettings({ playbackSpeed: speed });
+            setIsSpeedMenuOpen(false);
+          }}
+          className={`w-full text-left px-3 py-2 text-xs font-mono transition-colors cursor-pointer ${
+            Math.abs(playbackSpeed - speed) < 0.01
+              ? "bg-brand-green/20 text-brand-green font-bold"
+              : "text-gray-300 hover:bg-brand-light-gray"
+          }`}
+        >
+          {speed.toFixed(2)}x
+        </button>
+      ))}
+    </div>
+  )}
+</div>
 
               {/* Central buttons */}
               <div className="flex items-center gap-4">
@@ -861,103 +879,20 @@ useKeyboardShortcuts({
     onSelect={applySegment}
     onDelete={deleteSegment}
   />
+    <HistoryPanel
+    history={history.map((record) => record.url)}
+    currentUrl={videoUrl}
+    onSelect={handleUrlChange}
+  />
         </div>
         
       </main>
 
 
 
-      {/* Settings Sliding Drawer overlay */}
-      <SettingsDrawer
-        isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
-        settings={settings}
-        onUpdateSettings={handleUpdateSettings}
-      />
-<HistoryPanel
- history={history.map(record => record.url)}
-  currentUrl={videoUrl}
-  onSelect={handleUrlChange}
-  isOpen={isHistoryOpen}
-  onClose={() => setIsHistoryOpen(false)}
-/>
-      {/* Custom Key Bindings Modal Overlay */}
-      {isHelpOpen && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-brand-gray border border-brand-light-gray max-w-sm w-full rounded-2xl p-6 shadow-2xl flex flex-col gap-5">
-            <div className="flex items-center justify-between border-b border-brand-light-gray/40 pb-3">
-              <h3 className="font-bold text-white text-md flex items-center gap-2">
-                <Keyboard className="w-5 h-5 text-brand-green" />
-                <span>Keyboard Shortcuts</span>
-              </h3>
-              <button
-                onClick={() => setIsHelpOpen(false)}
-                className="text-gray-500 hover:text-white cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
+   
 
-            <div className="flex flex-col gap-3.5">
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Play / Pause</span>
-                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
-                  Space
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Previous subtitle</span>
-                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
-                  ←
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Next subtitle</span>
-                <kbd className="bg-brand-light-gray text-white px-2 py-0.5 rounded text-xs font-mono font-bold">
-                  →
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Toggle repeat loop</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-                  R
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Toggle shadow mode</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-                  S
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Loop current sentence</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-                  L
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Increase speed (+0.25)</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-                  +
-                </kbd>
-              </div>
-              <div className="flex justify-between items-center text-sm">
-                <span className="text-gray-400">Decrease speed (-0.25)</span>
-                <kbd className="bg-brand-light-gray text-white px-2.5 py-0.5 rounded text-xs font-mono font-bold">
-                  -
-                </kbd>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsHelpOpen(false)}
-              className="bg-brand-green hover:bg-emerald-500 text-black font-bold py-2.5 rounded-xl cursor-pointer transition-colors text-sm text-center"
-            >
-              Got it!
-            </button>
-          </div>
-        </div>
-      )}
+     
 
       {/* Floating Action Shortcut Toast Notification */}
       <div
