@@ -101,6 +101,8 @@ useEffect(() => {
     togglePlayPause,
     seekTo,
     setPlaybackSpeed,
+    captionsEnabled,      // جديد
+  toggleCaptions,   
   } = usePlayer("");
 
   // Helpers to mark practiced lines & increment repeats
@@ -831,6 +833,7 @@ useKeyboardShortcuts({
                     <Play className="w-5 h-5 fill-current" />
                   )}
                 </button>
+                
 
                 <button
                   onClick={goToNextSegment}
@@ -839,6 +842,17 @@ useKeyboardShortcuts({
                 >
                   <SkipForward className="w-5 h-5 fill-current" />
                 </button>
+                <button
+  onClick={toggleCaptions}
+  className={`text-[10px] font-black w-7 h-7 rounded-md border transition-all cursor-pointer flex items-center justify-center ${
+    captionsEnabled
+      ? "bg-brand-green text-black border-brand-green"
+      : "bg-transparent text-gray-400 border-brand-light-gray hover:text-white"
+  }`}
+  title="Toggle Captions"
+>
+  CC
+</button>
               </div>
 
               {/* Mini active loops indicators */}

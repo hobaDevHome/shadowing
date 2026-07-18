@@ -16,6 +16,7 @@ export function usePlayer(initialUrl: string = 'https://www.youtube.com/watch?v=
   const [duration, setDuration] = useState<number>(0);
   const [playbackSpeed, setPlaybackSpeedState] = useState<number>(1);
   const [isPlayerLoading, setIsPlayerLoading] = useState<boolean>(true);
+  const [captionsEnabled, setCaptionsEnabled] = useState<boolean>(false);
 
   // Keep a reference to the YT player instance
   const playerRef = useRef<any>(null);
@@ -59,19 +60,24 @@ export function usePlayer(initialUrl: string = 'https://www.youtube.com/watch?v=
     };
   }, [isPlaying, updateTime]);
 
-  const onPlayerReady = useCallback((event: any) => {
-    playerRef.current = event.target;
-    setIsPlayerLoading(false);
-    
-    // Set initial speed
-    playerRef.current.setPlaybackRate(playbackSpeed);
-    
-    // Fetch duration
-    if (typeof playerRef.current.getDuration === 'function') {
-      setDuration(playerRef.current.getDuration());
-    }
-    updateTime();
-  }, [playbackSpeed, updateTime]);
+const onPlayerReady = useCallback((event: any) => {
+  playerRef.current = event.target;
+  setIsPlayerLoading(false);
+
+  playerRef.current.setPlaybackRate(playbackSpeed);
+
+  if (typeof playerRef.current.getDuration === 'function') {
+    setDuration(playerRef.current.getDuration());
+  }
+
+  // Force captions off by default regardless of the viewer's own YouTube settings
+  if (typeof playerRef.current.setOption === 'function') {
+    playerRef.current.setOption('captions', 'track', {});
+  }
+  setCaptionsEnabled(false);
+
+  updateTime();
+}, [playbackSpeed, updateTime]);
 
   const onPlayerStateChange = useCallback((event: any) => {
     const state = event.data;
@@ -123,6 +129,18 @@ export function usePlayer(initialUrl: string = 'https://www.youtube.com/watch?v=
       playerRef.current.setPlaybackRate(speed);
     }
   }, []);
+  const toggleCaptions = useCallback(() => {
+  if (!playerRef.current || typeof playerRef.current.setOption !== 'function') return;
+  setCaptionsEnabled((prev) => {
+    const next = !prev;
+    playerRef.current.setOption(
+      'captions',
+      'track',
+      next ? { languageCode: 'en' } : {},
+    );
+    return next;
+  });
+}, []);
 
   return {
     videoUrl,
@@ -133,6 +151,8 @@ export function usePlayer(initialUrl: string = 'https://www.youtube.com/watch?v=
     duration,
     playbackSpeed,
     isPlayerLoading,
+    captionsEnabled,      // جديد
+  toggleCaptions, 
     onPlayerReady,
     onPlayerStateChange,
     play,
